@@ -56,11 +56,21 @@ app.post('/slack/events', async (req, res) => {
     // 神原さんまたはテストユーザーが :okubo_taiou: をリアクションした場合のみ
     if ((event.user === KAMBARA_USER_ID || event.user === TEST_USER_ID) && event.reaction === TARGET_REACTION) {
       try {
+        // 元メッセージの情報を取得
+        const result = await slackClient.conversations.history({
+          channel: event.item.channel,
+          latest: event.item.ts,
+          limit: 1,
+          inclusive: true
+        });
+        
+        const originalMessage = result.messages[0];
+        
         // メッセージリンク作成
         const messageLink = `https://slack.com/archives/${event.item.channel}/p${event.item.ts.replace('.', '')}`;
         
-        // 通知チャンネルに投稿（シンプルな形式）
-        const notificationText = `【作業担当】<@${OKUBO_USER_ID}>\n${messageLink}`;
+        // 通知チャンネルに投稿
+        const notificationText = `【作業担当】<@${OKUBO_USER_ID}>\n${originalMessage.text}\n${messageLink}`;
         
         await slackClient.chat.postMessage({
           channel: NOTIFICATION_CHANNEL_ID,
@@ -86,3 +96,12 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+```
+
+---
+
+### 通知形式
+```
+【作業担当】@大久保
+※こちらのメッセージ無視して頂いて構いません。①リアクション→通知専用チャンネルに移動するかの動作確認用
+https://slack.com/archives/...
