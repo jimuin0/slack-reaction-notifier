@@ -10,6 +10,7 @@ const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 const SLACK_SIGNING_SECRET = process.env.SLACK_SIGNING_SECRET;
 const NOTIFICATION_CHANNEL_ID = process.env.NOTIFICATION_CHANNEL_ID;
 const KAMBARA_USER_ID = process.env.KAMBARA_USER_ID;
+const TEST_USER_ID = process.env.TEST_USER_ID;
 const TARGET_REACTION = 'okubo_taiou';
 
 const slackClient = new WebClient(SLACK_BOT_TOKEN);
@@ -51,8 +52,8 @@ app.post('/slack/events', async (req, res) => {
   if (body.event && body.event.type === 'reaction_added') {
     const event = body.event;
     
-    // 神原さんが :okubo_taiou: をリアクションした場合のみ
-    if (event.user === KAMBARA_USER_ID && event.reaction === TARGET_REACTION) {
+    // 神原さんまたはテストユーザーが :okubo_taiou: をリアクションした場合のみ
+    if ((event.user === KAMBARA_USER_ID || event.user === TEST_USER_ID) && event.reaction === TARGET_REACTION) {
       try {
         // 元メッセージの情報を取得
         const result = await slackClient.conversations.history({
