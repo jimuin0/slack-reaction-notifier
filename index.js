@@ -11,6 +11,7 @@ const SLACK_SIGNING_SECRET = process.env.SLACK_SIGNING_SECRET;
 const NOTIFICATION_CHANNEL_ID = process.env.NOTIFICATION_CHANNEL_ID;
 const KAMBARA_USER_ID = process.env.KAMBARA_USER_ID;
 const TEST_USER_ID = process.env.TEST_USER_ID;
+const OKUBO_USER_ID = 'U06RVT4MDFX';
 const TARGET_REACTION = 'okubo_taiou';
 
 const slackClient = new WebClient(SLACK_BOT_TOKEN);
@@ -55,41 +56,17 @@ app.post('/slack/events', async (req, res) => {
     // 神原さんまたはテストユーザーが :okubo_taiou: をリアクションした場合のみ
     if ((event.user === KAMBARA_USER_ID || event.user === TEST_USER_ID) && event.reaction === TARGET_REACTION) {
       try {
-        // 元メッセージの情報を取得
-        const result = await slackClient.conversations.history({
-          channel: event.item.channel,
-          latest: event.item.ts,
-          limit: 1,
-          inclusive: true
-        });
-        
-        const originalMessage = result.messages[0];
-        
-        // チャンネル情報を取得
-        const channelInfo = await slackClient.conversations.info({
-          channel: event.item.channel
-        });
-        const channelName = channelInfo.channel.name;
-        
-        // 投稿者情報を取得
-        const userInfo = await slackClient.users.info({
-          user: originalMessage.user
-        });
-        const userName = userInfo.user.real_name || userInfo.user.name;
-        
         // メッセージリンク作成
         const messageLink = `https://slack.com/archives/${event.item.channel}/p${event.item.ts.replace('.', '')}`;
         
-        // 通知チャンネルに投稿
-        const notificationText = `📢 *リアクション通知*\n` +
-          `*チャンネル:* #${channelName}\n` +
-          `*投稿者:* ${userName}\n` +
-          `*メッセージ:* ${originalMessage.text}\n` +
-          `${messageLink}`;
+        // 通知チャンネルに投稿（シンプルな形式）
+        const notificationText = `【作業担当】<@${OKUBO_USER_ID}>\n${messageLink}`;
         
         await slackClient.chat.postMessage({
           channel: NOTIFICATION_CHANNEL_ID,
-          text: notificationText
+          text: notificationText,
+          unfurl_links: false,
+          unfurl_media: false
         });
         
         console.log('通知送信完了');
