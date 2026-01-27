@@ -96,12 +96,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-```
-
----
-
-### 通知形式
-```
-【作業担当】@大久保
-※こちらのメッセージ無視して頂いて構いません。①リアクション→通知専用チャンネルに移動するかの動作確認用
-https://slack.com/archives/...
