@@ -82,8 +82,15 @@ app.post('/slack/events', async (req, res) => {
           }
         }
         
-        // メッセージリンク作成
-        const messageLink = `https://slack.com/archives/${event.item.channel}/p${event.item.ts.replace('.', '')}`;
+        // メッセージリンク作成（スレッド内メッセージ対応）
+        let messageLink;
+        if (originalMessage.thread_ts && originalMessage.thread_ts !== originalMessage.ts) {
+          // スレッド内メッセージの場合
+          messageLink = `https://slack.com/archives/${event.item.channel}/p${event.item.ts.replace('.', '')}?thread_ts=${originalMessage.thread_ts}&cid=${event.item.channel}`;
+        } else {
+          // 通常メッセージの場合
+          messageLink = `https://slack.com/archives/${event.item.channel}/p${event.item.ts.replace('.', '')}`;
+        }
         
         // 通知チャンネルに投稿
         const notificationText = `【作業担当】<@${OKUBO_USER_ID}>\n${originalMessage.text}\n${messageLink}`;
