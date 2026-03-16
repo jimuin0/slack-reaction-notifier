@@ -56,15 +56,31 @@ app.post('/slack/events', async (req, res) => {
     // 神原さんまたはテストユーザーが :okubo_taiou: をリアクションした場合のみ
     if ((event.user === KAMBARA_USER_ID || event.user === TEST_USER_ID) && event.reaction === TARGET_REACTION) {
       try {
-        // 元メッセージの情報を取得
-        const result = await slackClient.conversations.history({
-          channel: event.item.channel,
-          latest: event.item.ts,
-          limit: 1,
-          inclusive: true
-        });
+        // 元メッセージの情報を取得（スレッド内対応）
+        let originalMessage;
         
-        const originalMessage = result.messages[0];
+        if (event.item.type === 'message') {
+          // まずhistoryで試みる
+          const result = await slackClient.conversations.history({
+            channel: event.item.channel,
+            latest: event.item.ts,
+            limit: 1,
+            inclusive: true
+          });
+          originalMessage = result.messages[0];
+        
+          // スレッド内メッセージの場合（tsが一致しない場合はrepliesから取得）
+          if (!originalMessage || originalMessage.ts !== event.item.ts) {
+            const threadResult = await slackClient.conversations.replies({
+              channel: event.item.channel,
+              ts: event.item.ts,
+              latest: event.item.ts,
+              limit: 1,
+              inclusive: true
+            });
+            originalMessage = threadResult.messages[0];
+          }
+        }
         
         // メッセージリンク作成
         const messageLink = `https://slack.com/archives/${event.item.channel}/p${event.item.ts.replace('.', '')}`;
